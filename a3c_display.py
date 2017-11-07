@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
-import os
 
 import tensorflow as tf
 import numpy as np
 
-import random
-
 from game import GameStateGym
 from game_ac_network import GameACFFNetwork, GameACLSTMNetwork
-from a3c_training_thread import A3CTrainingThread
 from rmsprop_applier import RMSPropApplier
 from config_utils import load_config
 

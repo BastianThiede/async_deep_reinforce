@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 import tensorflow as tf
 import numpy as np
-from pastalog import Log
 from datetime import datetime
-import random
 import time
-import sys
 
-from game import GameStateGym
+from game_state_gym import GameStateGym
 from game_ac_network import GameACFFNetwork, GameACLSTMNetwork
 
 
@@ -30,9 +27,13 @@ class A3CTrainingThread(object):
         self.thread_log = logger[1]
         self.thread_logfile = logger[0]
         if config['USE_LSTM']:
-            self.local_network = GameACLSTMNetwork(config['ACTION_SIZE'], thread_index, device)
+            self.local_network = GameACLSTMNetwork(config['ACTION_SIZE'],
+                                                   thread_index,
+                                                   device)
         else:
-            self.local_network = GameACFFNetwork(config['ACTION_SIZE'], thread_index, device)
+            self.local_network = GameACFFNetwork(config['ACTION_SIZE'],
+                                                 thread_index,
+                                                 device)
 
         self.local_network.prepare_loss(config['ENTROPY_BETA'])
 
@@ -62,16 +63,21 @@ class A3CTrainingThread(object):
         self.prev_local_t = 0
 
     def _anneal_learning_rate(self, global_time_step):
-        learning_rate = self.initial_learning_rate * (
-        self.max_global_time_step - global_time_step) / self.max_global_time_step
+        step_dif = self.max_global_time_step - global_time_step
+
+        learning_rate = self.initial_learning_rate * step_dif
+        learning_rate /= self.max_global_time_step
+
         if learning_rate < 0.0:
             learning_rate = 0.0
+
         return learning_rate
 
     def choose_action(self, pi_values):
         return np.random.choice(range(len(pi_values)), p=pi_values)
 
-    def _record_score(self, sess, summary_writer, summary_op, score_input, score, global_t):
+    def _record_score(self, sess, summary_writer, summary_op,
+                      score_input, score, global_t):
         summary_str = sess.run(summary_op, feed_dict={
             score_input: score
         })
@@ -96,10 +102,12 @@ class A3CTrainingThread(object):
 
         if self.config['USE_LSTM']:
             start_lstm_state = self.local_network.lstm_state_out
-        game_name = "Game_{}".format(global_t)
+
         # t_max times loop
         for i in range(self.config['LOCAL_T_MAX']):
-            pi_, value_ = self.local_network.run_policy_and_value(sess, self.game_state.s_t)
+            game_state = self.game_state.s_t
+            pi_, value_ = self.local_network.run_policy_and_value(sess,
+                                                                  game_state)
             action = self.choose_action(pi_)
 
             states.append(self.game_state.s_t)
@@ -113,20 +121,12 @@ class A3CTrainingThread(object):
             reward = self.game_state.reward
             terminal = self.game_state.terminal
             self.episode_reward += reward
-            if (self.thread_index == 0) and (self.local_t % self.config['LOG_INTERVAL'] == 0):
-                data_dict = dict()
-                data_dict.update({'PI_{}'.format(i): v for i, v in enumerate(pi_)})
-                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-                data_dict['Time'] = ts
-                data_dict['V'] = value_
-                data_dict['Action'] = action
-                data_dict['Step'] = global_t + self.local_t
-                data_dict['Score'] = reward
-                data_dict['Episode_reward'] = self.episode_reward
-                data_dict['GameName'] = game_name
+            if (self.thread_index == 0 and
+                self.local_t % self.config['LOG_INTERVAL'] == 0):
+                print("pi={}".format(pi_))
+                print(" V={}".format(value_))
 
-                self.thread_log.writerow(data_dict)
-                self.thread_logfile.flush()
+
 
             # clip reward
             rewards.append(np.clip(reward, -1, 1))
