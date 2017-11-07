@@ -4,7 +4,7 @@ import sys
 import tensorflow as tf
 import numpy as np
 
-from game import GameStateGym
+from game_state_gym import GameStateGym
 from game_ac_network import GameACFFNetwork, GameACLSTMNetwork
 from rmsprop_applier import RMSPropApplier
 from config_utils import load_config

@@ -1,5 +1,5 @@
 import json
-DEFAULT_CONFIG_PATH = './config/default.json'
+DEFAULT_CONFIG_PATH = './configs/default.json'
 
 
 def load_config(config_path):

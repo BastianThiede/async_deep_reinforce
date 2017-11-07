@@ -1,12 +1,14 @@
 import unittest
 import numpy as np
 
-from game_state import GameState
+from config_utils import load_config
+from game_state_gym import GameStateGym
 
 class TestSequenceFunctions(unittest.TestCase):
 
   def test_process(self):
-    game_state = GameState(0)
+    config = load_config(config_path=None)
+    game_state = GameStateGym(0, config=config)
     
     before_s_t = np.array( game_state.s_t )
     
