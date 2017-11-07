@@ -2,7 +2,7 @@
 
 Asynchronous deep reinforcement learning
 
-## About
+## About the original
 
 An attempt to repdroduce Google Deep Mind's paper "Asynchronous Methods for Deep Reinforcement Learning."
 
